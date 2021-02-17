@@ -1,6 +1,6 @@
-#!/usr/bin/php
+#!/usr/bin/php -q
 <?php
-include('phpagi.php');
+include('/home/zlatan/projects/include/phpagi.php');
 $agi = new AGI();
 
 //Fetch extension, needed later
@@ -19,6 +19,10 @@ if (mysqli_connect_error()) {
 //Check if there is entry for this user in db
 $query = 'SELECT password FROM users WHERE extension = "' . $caller_id . '"';
 $existing_user = $db->query($query);
+if (!$existing_user) {
+    $agi->verbose('Query failed');
+    goto end;
+}
 if ($existing_user->num_rows > 0) {
     $pw = $agi->get_data('agent-pass', -1)['result'];
     $user_pw = $existing_user->fetch_assoc()['password'];
@@ -44,8 +48,12 @@ for (;;) {
                 $agi->stream_file('pbx-invalid');
             } else {
                 $agi->stream_file('followme/pls-hold-while-try');
-                $agi->exec_dial('PJSIP', $ext); //What if ext doesn't exist?
-                // $agi->exec_dial('PJSIP', 'SOFTPHONE_B'); Call twinkle, test
+                // $status = $agi->exec_dial('PJSIP', $ext)['result']; //What if ext doesn't exist?
+                $status = $agi->exec_dial('PJSIP', 'SOFTPHONE_B')['result']; //Call twinkle, test
+                if ($status !== 200) {
+                    $agi->verbose('Call failed!');
+                    goto end;
+                }
             }
             break;
         case 2:
@@ -70,7 +78,11 @@ for (;;) {
             //If first time around, create entry in db
             $query = $user_pw ? 'UPDATE users SET password = "' . $newPw . '" WHERE extension = "' . $caller_id . '"'
                 : 'INSERT INTO users values ("' . $caller_id . '", "' . $pw . '")';
-            $db->query($query);
+            $ret = $db->query($query);
+            if (!$ret) {
+                $agi->verbose('Query failed');
+                goto end;
+            }
 
             $agi->stream_file('vm-passchanged');
             break;
