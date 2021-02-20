@@ -1,6 +1,6 @@
 #!/usr/bin/php -q
 <?php
-include('/home/zlatan/projects/include/phpagi.php');
+include('phpagi.php');
 $agi = new AGI();
 
 //Fetch extension, needed later
