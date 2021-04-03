@@ -57,8 +57,7 @@ class App
 
         $agi->stream_file($ext === $callerID ? 'pbx-invalid' : 'followme/pls-hold-while-try');
         if ($ext !== $callerID) {
-            // $status = $agi->exec_dial('PJSIP', $ext)['result'];
-            $status = $agi->exec_dial('PJSIP', 'SOFTPHONE_B')['result']; //Call SOFTPHONE_B set up on twinkle, for testing
+            $status = $agi->exec_dial('PJSIP', $ext)['result'];
             if ($status !== 200)
                 return -1;
         }
@@ -87,8 +86,13 @@ class App
             }
         }
         //If first time around, create entry in db, else update existing row in table
-        $query = $userPw ? 'UPDATE users SET password = "' . $newPw . '" WHERE extension = "' . $callerID . '"'
-            : 'INSERT INTO users values ("' . $callerID . '", "' . $pw . '")';
+        if ($userPw) {
+            $query = 'UPDATE users SET password = "' . $newPw . '" WHERE extension = "' . $callerID . '"';
+            $userPw = $newPw;
+        } else {
+            $query =  'INSERT INTO users values ("' . $callerID . '", "' . $pw . '")';
+            $userPw = $pw;
+        }
 
         if (!$db->query($query))
             die('Query failed');
