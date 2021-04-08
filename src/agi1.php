@@ -1,7 +1,7 @@
 #!/usr/bin/php -q
 <?php
-include('/home/zlatan/projects/agi/include/phpagi.php');
-include('/home/zlatan/projects/agi/include/app.php');
+include(dirname(__DIR__).'/include/phpagi.php');
+include(dirname(__DIR__).'/include/app.php');
 $agi = new AGI();
 $app = new App();
 
